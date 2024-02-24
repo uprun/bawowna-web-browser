@@ -8,26 +8,31 @@ import (
 )
 
 func main() {
-	rl.InitWindow(800, 450, "raylib [core] example - basic window")
+	rl.InitWindow(800, 450, "Bawowna web browser")
 	defer rl.CloseWindow()
 
 	rl.SetTargetFPS(60)
         var font = rl.LoadFontExByRunesNumber("./hack-font/Hack-Regular.ttf",32, 1256)
+        defer rl.UnloadFont(font)
+        var position = rl.Vector2 {
+            X: 190,
+            Y: 200,
+        }
 
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
 
 		rl.ClearBackground(rl.Black)
-                var position = rl.Vector2 {
-                    X: 190,
-                    Y: 200,
-                }
+                mouseDiff := rl.GetMouseWheelMoveV()
+                position.X += mouseDiff.X
+                position.Y += mouseDiff.Y
+                
 		rl.DrawTextEx(font, "Congrats! You created", position, 20.0, 3.0, rl.LightGray)
-                position = rl.Vector2 {
-                    X: 190,
-                    Y: 240,
+                position2 := rl.Vector2 {
+                    X: position.X,
+                    Y: position.Y + 30,
                 }
-		rl.DrawTextEx(font, "Тепер перевіремо українську!", position, 20.0, 3.0, rl.LightGray)
+		rl.DrawTextEx(font, "Тепер перевіремо українську!", position2, 20.0, 3.0, rl.LightGray)
 
 		rl.EndDrawing()
 	}
