@@ -2,11 +2,12 @@ package main
 
 import rl "github.com/gen2brain/raylib-go/raylib"
 import (
-//   "io/ioutil"
     "log"
     "net/http"
     "golang.org/x/net/html"
     "fmt"
+    "io"
+    "bytes"
 )
 
 func main() {
@@ -52,12 +53,50 @@ func HttpGetHackerNews() {
     if err != nil {
       log.Fatalln(err)
     }
-    doc, err := html.Parse(resp.Body)
+
+// Read the response body
+    body_bytes, _ := io.ReadAll(resp.Body)
+ 
+    // Print the body as a string
+    fmt.Println("HTML:\n\n", string(body_bytes))
+
+    reader := bytes.NewReader(body_bytes)
+    doc, err := html.Parse(reader)
     if err != nil {
       log.Fatalln(err)
     }
 
     RenderNode(doc, 0)
+    PrettyRenderNode(doc)
+}
+
+func PrettyRenderNode(node *html.Node) {
+    //fmt.Println("type:", node.Type)
+    if node.Type == html.ElementNode && node.Data == "tr" {
+        fmt.Println("")
+    }
+
+    if node.Type == html.ElementNode && node.Data == "br" {
+        fmt.Println("")
+    }
+
+    if node.Type == html.ElementNode && node.Data == "div" {
+        fmt.Println("")
+    }
+
+    if node.Type == html.ElementNode && node.Data == "td" {
+        fmt.Print("|")
+    }
+
+    if node.Type != html.ElementNode  {
+        fmt.Print(node.Data)
+    }
+    
+    
+    // traverse children
+    for c := node.FirstChild; c != nil; c = c.NextSibling {
+        PrettyRenderNode(c)
+    }
 }
 
 func RenderNode(node *html.Node, level int) {
