@@ -43,7 +43,10 @@ func main() {
 }
 
 func HttpGetHackerNews() {
-    resp, err := http.Get("https://news.ycombinator.com/")
+    client := &http.Client{}
+    req, _ := http.NewRequest("GET", "https://news.ycombinator.com/", nil)
+    req.Header.Set("User-Agent", "Bawowna-web-browser?v=2024-02-25")
+    resp, err := client.Do(req)
     defer resp.Body.Close()
     
     if err != nil {
@@ -63,6 +66,12 @@ func RenderNode(node *html.Node, level int) {
         fmt.Print("-")
     }
     fmt.Println("Data:", node.Data)
+    for _, attribute := range node.Attr {
+        for lvl := 0; lvl <= level; lvl ++ {
+            fmt.Print("-")
+        }
+        fmt.Printf("%q = %q\n", attribute.Key, attribute.Val)
+    }
     // traverse children
     for c := node.FirstChild; c != nil; c = c.NextSibling {
         RenderNode(c, level + 1)
