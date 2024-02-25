@@ -1,10 +1,12 @@
 package main
 
-import rl "github.com/uprun/raylib-go/raylib"
+import rl "github.com/gen2brain/raylib-go/raylib"
 import (
-   "io/ioutil"
-   "log"
-   "net/http"
+//   "io/ioutil"
+    "log"
+    "net/http"
+    "golang.org/x/net/html"
+    "fmt"
 )
 
 func main() {
@@ -12,12 +14,14 @@ func main() {
 	defer rl.CloseWindow()
 
 	rl.SetTargetFPS(60)
-        var font = rl.LoadFontExByRunesNumber("./hack-font/Hack-Regular.ttf",32, 1256)
+        var font = rl.LoadFontEx("./hack-font/Hack-Regular.ttf",32, nil, 1256)
         defer rl.UnloadFont(font)
         var position = rl.Vector2 {
             X: 190,
             Y: 200,
         }
+
+        HttpGetHackerNews()
 
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
@@ -39,18 +43,28 @@ func main() {
 }
 
 func HttpGetHackerNews() {
-    // this is test code I copied
     resp, err := http.Get("https://news.ycombinator.com/")
+    defer resp.Body.Close()
+    
     if err != nil {
       log.Fatalln(err)
     }
-        //We Read the response body on the line below.
-        body, err := ioutil.ReadAll(resp.Body)
-        if err != nil {
-              log.Fatalln(err)
-        }
-        //Convert the body to type string
-        sb := string(body)
-        log.Printf(sb)
-        // end of test code
+    doc, err := html.Parse(resp.Body)
+    if err != nil {
+      log.Fatalln(err)
+    }
+
+    RenderNode(doc, 0)
+}
+
+func RenderNode(node *html.Node, level int) {
+    //fmt.Println("type:", node.Type)
+    for lvl := 0; lvl < level; lvl ++ {
+        fmt.Print("-")
+    }
+    fmt.Println("Data:", node.Data)
+    // traverse children
+    for c := node.FirstChild; c != nil; c = c.NextSibling {
+        RenderNode(c, level + 1)
+    }
 }
