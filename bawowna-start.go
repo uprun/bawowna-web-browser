@@ -10,16 +10,24 @@ import (
     "bytes"
 )
 
+type RenderRequest struct {
+    Text string
+    Anchor rl.Vector2 
+}
+
+var queue = make([]RenderRequest, 0)
+var font rl.Font
+
 func main() {
 	rl.InitWindow(800, 450, "Bawowna web browser")
 	defer rl.CloseWindow()
 
 	rl.SetTargetFPS(60)
-        var font = rl.LoadFontEx("./hack-font/Hack-Regular.ttf",32, nil, 1256)
+        font = rl.LoadFontEx("./hack-font/Hack-Regular.ttf",32, nil, 1256)
         defer rl.UnloadFont(font)
         var position = rl.Vector2 {
-            X: 190,
-            Y: 200,
+            X: 0,
+            Y: 0,
         }
 
         HttpGetHackerNews()
@@ -29,15 +37,16 @@ func main() {
 
 		rl.ClearBackground(rl.Black)
                 mouseDiff := rl.GetMouseWheelMoveV()
-                position.X += mouseDiff.X
-                position.Y += mouseDiff.Y
-                
-		rl.DrawTextEx(font, "Congrats! You created", position, 20.0, 3.0, rl.LightGray)
-                position2 := rl.Vector2 {
-                    X: position.X,
-                    Y: position.Y + 30,
+                position.X += mouseDiff.X * 2
+                position.Y += mouseDiff.Y * 2
+ 
+                for _, top_request := range queue {
+
+                    top_request.Anchor.X += position.X
+                    top_request.Anchor.Y += position.Y
+                    rl.DrawTextEx(font, top_request.Text, top_request.Anchor , 20.0, 3.0, rl.LightGray)
                 }
-		rl.DrawTextEx(font, "Тепер перевіремо українську!", position2, 20.0, 3.0, rl.LightGray)
+
 
 		rl.EndDrawing()
 	}
@@ -46,7 +55,7 @@ func main() {
 func HttpGetHackerNews() {
     client := &http.Client{}
     req, _ := http.NewRequest("GET", "https://news.ycombinator.com/", nil)
-    req.Header.Set("User-Agent", "Bawowna-web-browser?v=2024-02-25")
+    req.Header.Set("User-Agent", "Bawowna-web-browser?v=2024-03-03")
     resp, err := client.Do(req)
     defer resp.Body.Close()
     
@@ -66,8 +75,9 @@ func HttpGetHackerNews() {
       log.Fatalln(err)
     }
 
-    RenderNode(doc, 0)
+    TreeRenderNode(doc, 0)
     PrettyRenderNode(doc)
+    GuiRenderNode(doc, rl.Vector2{0,0})
 }
 
 func PrettyRenderNode(node *html.Node) {
@@ -99,7 +109,43 @@ func PrettyRenderNode(node *html.Node) {
     }
 }
 
-func RenderNode(node *html.Node, level int) {
+func GuiRenderNode(node *html.Node, anchor_parent rl.Vector2) rl.Vector2 {
+    anchor := anchor_parent
+    if node.Type == html.ElementNode && node.Data == "tr" {
+        anchor.X = 0
+        anchor.Y += 20
+    }
+
+    if node.Type == html.ElementNode && node.Data == "br" {
+        anchor.X = 0
+        anchor.Y += 20
+    }
+
+    if node.Type == html.ElementNode && node.Data == "div" {
+        anchor.X = 0
+        anchor.Y += 20
+    }
+
+    if node.Type == html.ElementNode && node.Data == "td" {
+        anchor.X += 20
+    }
+//    fmt.Println(anchor_parent, anchor)
+
+    if node.Type != html.ElementNode  {
+        queue = append(queue, RenderRequest{node.Data, anchor})
+        size := rl.MeasureTextEx(font, node.Data, 20.0, 3.0)
+        anchor.X += size.X + 20
+    }
+    
+    
+    // traverse children
+    for c := node.FirstChild; c != nil; c = c.NextSibling {
+        anchor = GuiRenderNode(c, anchor)
+    }
+    return anchor
+}
+
+func TreeRenderNode(node *html.Node, level int) {
     //fmt.Println("type:", node.Type)
     for lvl := 0; lvl < level; lvl ++ {
         fmt.Print("-")
@@ -113,6 +159,6 @@ func RenderNode(node *html.Node, level int) {
     }
     // traverse children
     for c := node.FirstChild; c != nil; c = c.NextSibling {
-        RenderNode(c, level + 1)
+        TreeRenderNode(c, level + 1)
     }
 }
