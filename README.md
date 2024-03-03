@@ -19,7 +19,7 @@ I know there is a lot of work to be done.
 ## Running
 
 ```
-$ go run -x .
+go run -x .
 ```
 
 # Support on Patreon
