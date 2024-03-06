@@ -44,7 +44,12 @@ func main() {
 
                     top_request.Anchor.X += position.X
                     top_request.Anchor.Y += position.Y
-                    rl.DrawTextEx(font, top_request.Text, top_request.Anchor , 20.0, 3.0, rl.LightGray)
+                    var offset float32 = 0.0
+                    // draw individual glyph/rune separately
+                    for _, v := range top_request.Text {
+                        rl.DrawTextEx(font, string([]rune {v}), rl.Vector2{top_request.Anchor.X + offset, top_request.Anchor.Y} , 20.0, 3.0, rl.Green)
+                        offset += rl.MeasureTextEx(font, string([]rune {v}), 20.0, 3.0).X + 3.0
+                    }
                 }
 
 
@@ -76,38 +81,9 @@ func HttpGetHackerNews() {
     }
 
     TreeRenderNode(doc, 0)
-    PrettyRenderNode(doc)
     GuiRenderNode(doc, rl.Vector2{0,0})
 }
 
-func PrettyRenderNode(node *html.Node) {
-    //fmt.Println("type:", node.Type)
-    if node.Type == html.ElementNode && node.Data == "tr" {
-        fmt.Println("")
-    }
-
-    if node.Type == html.ElementNode && node.Data == "br" {
-        fmt.Println("")
-    }
-
-    if node.Type == html.ElementNode && node.Data == "div" {
-        fmt.Println("")
-    }
-
-    if node.Type == html.ElementNode && node.Data == "td" {
-        fmt.Print("|")
-    }
-
-    if node.Type != html.ElementNode  {
-        fmt.Print(node.Data)
-    }
-    
-    
-    // traverse children
-    for c := node.FirstChild; c != nil; c = c.NextSibling {
-        PrettyRenderNode(c)
-    }
-}
 
 func GuiRenderNode(node *html.Node, anchor_parent rl.Vector2) rl.Vector2 {
     anchor := anchor_parent
